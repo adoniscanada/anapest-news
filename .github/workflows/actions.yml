@@ -24,7 +24,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: execute py script
-        run: python workflow.py > raw_articles.txt
+        run: python main.py
 
       - name: commit files
         run: |
