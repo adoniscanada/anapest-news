@@ -36,10 +36,15 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                     # No articles into conjunctions
                     not (len(line) > 0 and word_to_key(i) in CONJUNCTIONS and word_to_key(line[-1]) in ARTICLES)
             ]
+            # Enforce rules
             for r in rules:
                 if not r:
                     fits = False
                     break
+            
+            # Ignore stresses of monosyllabic words
+            if len(stresses) == 1 and len(meter) > 0:
+                stresses = [meter[position % len(meter)]]
 
             if fits:
                 # Enforce meter (skipped if length of meter is 0)

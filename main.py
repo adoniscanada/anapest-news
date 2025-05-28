@@ -1,3 +1,4 @@
+import argparse
 import logging
 import logging.handlers
 import pickle
@@ -20,18 +21,28 @@ formatter = logging.Formatter('%(asctime)s %(message)s')
 logger_file_handler.setFormatter(formatter)
 logger.addHandler(logger_file_handler)
 
+# Main
 if __name__ == '__main__':
     tz = timezone('US/Eastern')
     now = datetime.datetime.now(tz)
     db = generate_database(now.date())
     
-    logger.info('Scraped ' + str(len(db)) + ' news articles.')
+    logger.info('Scraped ' + str(len(db)) + ' news articles')
     
+    desc = 'Poem generator from CNN articles'
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('-m', '--Meter', help='Set meter', default='0,0,1')
+    parser.add_argument('-b', '--Banned', help='Set list of words not to be considered in poem generation', default='')
+    parser.add_argument('-l', '--Length', help='Set line length', default=6)
+    args = parser.parse_args()
+
     poems = []
+
     for i in db.values():
-        poems.append(generate_poem(i.split()))
-    
+        p = generate_poem(i.split(), [b for b in args.Banned.split(',')], [int(m) for m in args.Meter.split(',')], int(args.Length))
+        poems.append(p)
+
     with open('current_poems.json', 'w') as file:
         json.dump(poems, file)
     
-    logger.info('Generated poems.')
+    logger.info('Generated poems with the arguments:' + str(args))
