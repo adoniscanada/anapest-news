@@ -35,18 +35,12 @@ def scrape_article(link : str) -> tuple:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
         title = soup.title.string
-        p = soup.find_all('p')
-
-        start = 0
-        for i in p:
-            if START_STR in i:
-                start = i + 1
-                break
+        p = soup.find_all('p', class_='paragraph')
         
-        paragraphs = [i.text.strip() for i in p[start:] if i.text[0] == '\n' and '.' in i.text]
+        paragraphs = [i.text.strip() for i in p]
         text = ' '.join(paragraphs)
-    except:
-        pass
+    except Exception as e:
+        print(e)
 
     if len(text) > 0:
         return (title, text)
