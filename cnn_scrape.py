@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import datetime
 
 NEWS_URL = 'https://www.cnn.com'
+START_STR = '(CNN)'
 
 def scrape_for_links(keyword : str) -> set:
     links = set()
@@ -35,7 +36,14 @@ def scrape_article(link : str) -> tuple:
         soup = BeautifulSoup(html, 'html.parser')
         title = soup.title.string
         p = soup.find_all('p')
-        paragraphs = [i.text.strip() for i in p if i.text[0] == '\n' and '.' in i.text]
+
+        start = 0
+        for i in p:
+            if START_STR in i:
+                start = i + 1
+                break
+        
+        paragraphs = [i.text.strip() for i in p[start:] if i.text[0] == '\n' and '.' in i.text]
         text = ' '.join(paragraphs)
     except:
         pass

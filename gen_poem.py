@@ -45,6 +45,10 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
             # Ignore stresses of monosyllabic words
             if len(stresses) == 1 and len(meter) > 0:
                 stresses = [meter[position % len(meter)]]
+            
+            # Ignore secondary stresses (if not in meter)
+            if not (2 in meter):
+                stresses = [min(i, 1) for i in stresses]
 
             if fits:
                 # Enforce meter (skipped if length of meter is 0)
