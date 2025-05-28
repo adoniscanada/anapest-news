@@ -3,7 +3,7 @@ import random
 
 ARTICLES = ['THE', 'AN']
 CONJUNCTIONS = ['FOR', 'AND', 'NOR', 'BUT', 'OR', 'YET', 'SO', 'ALTHOUGH', 'AFTER', 'AS', 'WHILE', 'WHEN', 'WHEREAS', 'WHENEVER', 'WHEREVER', 'WHETHER', 'HOW', 'IF', 'THOUGH', 'BECAUSE', 'BEFORE', 'UNTIL', 'UNLESS', 'SINCE']
-STOPS = ['OF', 'ON', 'THE', 'AT', 'FROM', 'IN', 'TO', 'ARE', 'WAS', 'WERE', 'THEY']
+STOPS = ['OF', 'ON', 'THE', 'AT', 'FROM', 'IN', 'TO', 'ARE', 'WAS', 'WERE', 'THEY', 'AND']
 
 # Load pre-computed stressdict (see gen_stress_dict.py)
 stressdict = {}

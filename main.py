@@ -36,11 +36,10 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--Length', help='Set line length', default=6)
     args = parser.parse_args()
 
-    poems = []
-
-    for i in db.values():
-        p = generate_poem(i.split(), [b for b in args.Banned.split(',')], [int(m) for m in args.Meter.split(',')], int(args.Length))
-        poems.append(p)
+    poems = {}
+    for i in db.keys():
+        p = generate_poem(db[i].split(), [b for b in args.Banned.split(',')], [int(m) for m in args.Meter.split(',')], int(args.Length))
+        poems[i] = p
 
     with open('current_poems.json', 'w') as file:
         json.dump(poems, file)
