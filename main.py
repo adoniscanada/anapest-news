@@ -26,22 +26,24 @@ if __name__ == '__main__':
     tz = timezone('US/Eastern')
     now = datetime.datetime.now(tz)
     db = generate_database(now.date())
-    
+
     logger.info('Scraped ' + str(len(db)) + ' news articles')
-    
+
     desc = 'Poem generator from CNN articles'
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-m', '--Meter', help='Set meter', default='0,0,1')
     parser.add_argument('-b', '--Banned', help='Set list of words not to be considered in poem generation', default='')
-    parser.add_argument('-l', '--Length', help='Set line length', default=6)
+    parser.add_argument('-ll', '--Line', help='Set line length', default=6)
+    parser.add_argument('-pl', '--Poem', help='Set poem length', default=360)
+    parser.add_argument('-o', '--Output', help='Set output file', default='poems.json')
     args = parser.parse_args()
 
     poems = {}
     for i in db.keys():
-        p = generate_poem(db[i].split(), [b for b in args.Banned.split(',')], [int(m) for m in args.Meter.split(',')], int(args.Length))
+        p = generate_poem(db[i].split(), [b for b in args.Banned.split(',')], [int(m) for m in args.Meter.split(',')], int(args.Line), int(args.Poem))
         poems[i] = p
 
-    with open('current_poems.json', 'w') as file:
+    with open(args.Output, 'w') as file:
         json.dump(poems, file)
     
     logger.info('Generated poems with the arguments:' + str(args))

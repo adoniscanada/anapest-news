@@ -10,7 +10,7 @@ stressdict = {}
 with open('stressdict.pkl', 'rb') as file:
     stressdict = pickle.load(file)
 
-def generate_poem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1], desired_line_length : int = 9):
+def generate_poem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1], desired_line_length : int = 9, desired_poem_length : int = 120):
     if len(stressdict) == 0:
         return ''
 
@@ -70,6 +70,10 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                                 line[-1] += '...'
                             else:
                                 poem += ' '.join(line) + '\n'
+                                # Check poem length
+                                if len(poem) >= desired_poem_length:
+                                    return poem
+                                
                                 # Divide stanzas
                                 if len(line) < desired_line_length - 1:
                                     poem += '\n'
