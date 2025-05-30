@@ -34,7 +34,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--Meter', help='Set meter', default='0,0,1')
     parser.add_argument('-b', '--Banned', help='Set list of words not to be considered in poem generation', default='')
     parser.add_argument('-ll', '--Line', help='Set line length', default=6)
-    parser.add_argument('-pl', '--Poem', help='Set poem length', default=360)
+    parser.add_argument('-pl', '--Poem', help='Set poem length', default=480)
     parser.add_argument('-o', '--Output', help='Set output file', default='poems.json')
     args = parser.parse_args()
 
