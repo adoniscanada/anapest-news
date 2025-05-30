@@ -79,7 +79,7 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                         formatted = formatted[0].upper() + formatted[1:]
                     elif word_to_key(formatted) in ARTICLES + CONJUNCTIONS + PRONOUNS + PREPOSITIONS:
                         formatted = formatted.lower()
-                        if position % len(meter) == 0:
+                        if position % len(meter) == 0 and line[-1] != '.':
                             line[-1] += ','
 
                     line.append(formatted)
@@ -91,10 +91,12 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                             if word_to_key(formatted) in STOPS and syllable_count < desired_line_length * 1.5:
                                 line[-1] += '...'
                             else:
-                                poem += ' '.join(line) + newline
                                 # Check poem length
                                 if len(poem) >= desired_poem_length and not word_to_key(formatted) in STOPS:
-                                    return poem + '.'
+                                    poem += ' '.join(line) + '.'
+                                    return poem
+                                
+                                poem += ' '.join(line) + newline
                                 
                                 # Divide stanzas
                                 if len(line) < desired_line_length - 1:
