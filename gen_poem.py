@@ -89,6 +89,9 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                                 
                                 line.clear()
                                 syllable_count = 0
+                        elif not word_to_key(formatted) in STOPS:
+                            line[-1] += ','
+
     return poem
 
 def word_to_key(word : str):
