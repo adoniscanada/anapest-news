@@ -3,6 +3,7 @@ import random
 
 ARTICLES = ['THE', 'AN']
 CONJUNCTIONS = ['FOR', 'AND', 'NOR', 'BUT', 'OR', 'YET', 'SO', 'ALTHOUGH', 'AFTER', 'AS', 'WHILE', 'WHEN', 'WHEREAS', 'WHENEVER', 'WHEREVER', 'WHETHER', 'HOW', 'IF', 'THOUGH', 'BECAUSE', 'BEFORE', 'UNTIL', 'UNLESS', 'SINCE']
+PREPOSITIONS = ['IN', 'FROM', 'OF', 'UNTO', 'UNTIL', 'UPON', 'TO']
 STOPS = ['OF', 'ON', 'THE', 'AT', 'FROM', 'IN', 'TO', 'ARE', 'WAS', 'WERE', 'THEY', 'AND']
 
 # Load pre-computed stressdict (see gen_stress_dict.py)
@@ -10,7 +11,7 @@ stressdict = {}
 with open('stressdict.pkl', 'rb') as file:
     stressdict = pickle.load(file)
 
-def generate_poem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1], desired_line_length : int = 9, desired_poem_length : int = 120):
+def generate_poem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1], desired_line_length : int = 9, desired_poem_length : int = 120, html = True):
     if len(stressdict) == 0:
         return ''
 
@@ -18,6 +19,8 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
     line = []
     syllable_count = 0
     position = 0
+    newline = '<br />' if html else '\n'
+
     # Iterate through each word
     for i in text_list:
         key = word_to_key(i)
@@ -33,8 +36,10 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                     not (len(line) > 0 and word_to_key(i) == word_to_key(line[-1])),
                     # Non-consecutive articles
                     not (len(line) > 0 and word_to_key(i) in ARTICLES),
-                    # No articles into conjunctions
-                    not (len(line) > 0 and word_to_key(i) in CONJUNCTIONS and word_to_key(line[-1]) in ARTICLES)
+                    # No articles into conjunctions.
+                    not (len(line) > 0 and word_to_key(i) in CONJUNCTIONS and word_to_key(line[-1]) in ARTICLES),
+                    # No articles into prepositions.
+                    not (len(line) > 0 and word_to_key(i) in PREPOSITIONS and word_to_key(line[-1]) in ARTICLES)
             ]
             # Enforce rules
             for r in rules:
@@ -42,8 +47,8 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                     fits = False
                     break
             
-            # Ignore stresses of monosyllabic words
-            if len(stresses) == 1 and len(meter) > 0:
+            # Ignore stresses of stressed monosyllabic words (assume stressed words can be read unstressed, but unstressed words cannot be stressed)
+            if stresses == [1] and len(meter) > 0:
                 stresses = [meter[position % len(meter)]]
             
             # Ignore secondary stresses (if not in meter)
@@ -73,14 +78,14 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                             if word_to_key(formatted) in STOPS and syllable_count < desired_line_length * 1.5:
                                 line[-1] += '...'
                             else:
-                                poem += ' '.join(line) + '\n'
+                                poem += ' '.join(line) + newline
                                 # Check poem length
-                                if len(poem) >= desired_poem_length:
+                                if len(poem) >= desired_poem_length and not word_to_key(formatted) in STOPS:
                                     return poem
                                 
                                 # Divide stanzas
                                 if len(line) < desired_line_length - 1:
-                                    poem += '\n'
+                                    poem += newline
                                 
                                 line.clear()
                                 syllable_count = 0
