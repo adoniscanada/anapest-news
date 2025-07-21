@@ -2,10 +2,10 @@ import pickle
 import random
 
 ARTICLES = ['THE', 'AN']
-PRONOUNS = ['HE', 'SHE', 'HIS', 'HER', 'THEY', 'THEIR', 'HIM', 'HERS', 'THEM', 'MY']
+PRONOUNS = ['HE', 'SHE', 'HIS', 'HER', 'THEY', 'THEIR', 'HIM', 'HERS', 'THEM', 'MY', 'IT']
 CONJUNCTIONS = ['FOR', 'AND', 'NOR', 'BUT', 'OR', 'YET', 'SO', 'ALTHOUGH', 'AFTER', 'AS', 'WHILE', 'WHEN', 'WHEREAS', 'WHENEVER', 'WHEREVER', 'WHETHER', 'HOW', 'IF', 'THOUGH', 'BECAUSE', 'BEFORE', 'UNTIL', 'UNLESS', 'SINCE']
 PREPOSITIONS = ['IN', 'FROM', 'OF', 'UNTO', 'UNTIL', 'UPON', 'TO', 'AT']
-STOPS = ['OF', 'ON', 'THE', 'AT', 'FROM', 'IN', 'TO', 'ARE', 'WAS', 'WERE', 'AND', 'WITH', 'IS']
+STOPS = ['ON', 'ARE', 'WAS', 'WERE', 'WITH', 'IS'] + ARTICLES + PRONOUNS + PREPOSITIONS
 
 # Load pre-computed stressdict (see gen_stress_dict.py)
 stressdict = {}
@@ -35,26 +35,25 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
 
         if ((key in stressdict) or (i.isupper() and key in common_acronyms)) and not (key in words_to_keys(banned_words)):
             stresses = common_acronyms[key] if (i.isupper() and key in common_acronyms) else stressdict[key]
-            # Add rules here: (word is only considered if all rules equate to True)
+            # Add boolean rules here: (word is only considered if all rules equate to True)
+            lineKeys = [word_to_key(j) for j in line]
             rules = [
-                    # Non-consecutive polysyllabics
-                    not (len(line) > 0 and len(stresses) > 1 and len(stressdict[word_to_key(line[-1])]) > 1),
-                    # Skip duplicates
-                    not (len(line) > 0 and word_to_key(i) == word_to_key(line[-1])),
-                    # Non-consecutive articles
-                    not (len(line) > 0 and word_to_key(i) in ARTICLES),
+                    # No consecutive polysyllabics
+                    not (len(line) > 0 and len(stresses) > 1 and len(stressdict[lineKeys[-1]]) > 1),
                     # No articles into conjunctions
-                    not (len(line) > 0 and word_to_key(i) in CONJUNCTIONS and word_to_key(line[-1]) in ARTICLES),
+                    not (len(line) > 0 and _are_keys_in_subsets([key, lineKeys[-1]], [CONJUNCTIONS, ARTICLES])),
                     # No articles into prepositions
-                    not (len(line) > 0 and word_to_key(i) in PREPOSITIONS and word_to_key(line[-1]) in ARTICLES),
-                    # No prepositions into prepositions
-                    not (len(line) > 0 and word_to_key(i) in PREPOSITIONS and word_to_key(line[-1]) in PREPOSITIONS),
-                    # No pronouns into pronouns
-                    not (len(line) > 0 and word_to_key(i) in PRONOUNS and word_to_key(line[-1]) in PRONOUNS),
+                    not (len(line) > 0 and _are_keys_in_subsets([key, lineKeys[-1]], [PREPOSITIONS, ARTICLES])),
+                    # No consecutive prepositions
+                    not (len(line) > 0 and _are_keys_in_subsets([key, lineKeys[-1]], [PREPOSITIONS, PREPOSITIONS])),
+                    # No consecutive pronouns
+                    not (len(line) > 0 and _are_keys_in_subsets([key, lineKeys[-1]], [PRONOUNS, PRONOUNS])),
                     # No starting a line on a stop
-                    not (len(line) == 0 and word_to_key(i) in STOPS),
+                    not (len(line) == 0 and key in STOPS),
                     # No prepositions into conjunctions
-                    not (len(line) > 0 and word_to_key(i) in PREPOSITIONS and word_to_key(line[-1]) in CONJUNCTIONS)
+                    not (len(line) > 0 and _are_keys_in_subsets([key, lineKeys[-1]], [CONJUNCTIONS, PREPOSITIONS])),
+                    # No duplicates within line
+                    not (_are_keys_in_subsets([key], lineKeys))
             ]
             # Enforce rules
             for r in rules:
@@ -62,15 +61,19 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                     fits = False
                     break
             
+            # Non-boolean rules
+            # Format for poem
+            formatted = _remove_all(['.',',',':','“','”'], i)
             # Ignore stresses of stressed monosyllabic words (assume stressed words can be read unstressed, but unstressed words cannot be stressed)
             if stresses == [1] and len(meter) > 0:
                 stresses = [meter[position % len(meter)]]
-            
             # Ignore secondary stresses (if not in meter)
             if not (2 in meter):
                 stresses = [min(i, 1) for i in stresses]
+            # Generalize articles
+            if word_to_key(formatted) in ARTICLES:
+                formatted = 'the'
 
-            formatted = _remove_all(['.',',',':','“','”'], i)
             if fits:
                 # Enforce meter (skipped if length of meter is 0)
                 for j in range(len(stresses)):
@@ -102,7 +105,6 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                                         line[-1] = replacement[0]
                                         position += len(replacement[1]) - len(stresses)
                                         syllable_count += len(stresses)
-                                        print(formatted + ' replaced by ' + replacement[0])
                                         break
                             else:
                                 # Check poem length
@@ -136,3 +138,11 @@ def _remove_all(list : list, word : str):
     for i in list:
         w = w.replace(i, '')
     return w
+
+def _are_keys_in_subsets(keys : list, subsets : list):
+    if len(keys) != len(subsets):
+        return False
+    for i in range(len(keys)):
+        if not (keys[i] in subsets[i]):
+            return False
+    return True
