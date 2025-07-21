@@ -5,7 +5,7 @@ ARTICLES = ['THE', 'AN']
 PRONOUNS = ['HE', 'SHE', 'HIS', 'HER', 'THEY', 'THEIR', 'HIM', 'HERS', 'THEM', 'MY']
 CONJUNCTIONS = ['FOR', 'AND', 'NOR', 'BUT', 'OR', 'YET', 'SO', 'ALTHOUGH', 'AFTER', 'AS', 'WHILE', 'WHEN', 'WHEREAS', 'WHENEVER', 'WHEREVER', 'WHETHER', 'HOW', 'IF', 'THOUGH', 'BECAUSE', 'BEFORE', 'UNTIL', 'UNLESS', 'SINCE']
 PREPOSITIONS = ['IN', 'FROM', 'OF', 'UNTO', 'UNTIL', 'UPON', 'TO']
-STOPS = ['OF', 'ON', 'THE', 'AT', 'FROM', 'IN', 'TO', 'ARE', 'WAS', 'WERE', 'THEY', 'AND', 'WITH', 'IS']
+STOPS = ['OF', 'ON', 'THE', 'AT', 'FROM', 'IN', 'TO', 'ARE', 'WAS', 'WERE', 'AND', 'WITH', 'IS']
 
 # Load pre-computed stressdict (see gen_stress_dict.py)
 stressdict = {}
@@ -49,7 +49,11 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                     # No prepositions into prepositions
                     not (len(line) > 0 and word_to_key(i) in PREPOSITIONS and word_to_key(line[-1]) in PREPOSITIONS),
                     # No pronouns into pronouns
-                    not (len(line) > 0 and word_to_key(i) in PRONOUNS and word_to_key(line[-1]) in PRONOUNS)
+                    not (len(line) > 0 and word_to_key(i) in PRONOUNS and word_to_key(line[-1]) in PRONOUNS),
+                    # No starting a line on a stop
+                    not (len(line) == 0 and word_to_key(i) in STOPS),
+                    # No prepositions into conjunctions
+                    not (len(line) > 0 and word_to_key(i) in PREPOSITIONS and word_to_key(line[-1]) in CONJUNCTIONS)
             ]
             # Enforce rules
             for r in rules:
