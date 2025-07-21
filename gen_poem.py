@@ -4,7 +4,7 @@ import random
 ARTICLES = ['THE', 'AN']
 PRONOUNS = ['HE', 'SHE', 'HIS', 'HER', 'THEY', 'THEIR', 'HIM', 'HERS', 'THEM', 'MY']
 CONJUNCTIONS = ['FOR', 'AND', 'NOR', 'BUT', 'OR', 'YET', 'SO', 'ALTHOUGH', 'AFTER', 'AS', 'WHILE', 'WHEN', 'WHEREAS', 'WHENEVER', 'WHEREVER', 'WHETHER', 'HOW', 'IF', 'THOUGH', 'BECAUSE', 'BEFORE', 'UNTIL', 'UNLESS', 'SINCE']
-PREPOSITIONS = ['IN', 'FROM', 'OF', 'UNTO', 'UNTIL', 'UPON', 'TO']
+PREPOSITIONS = ['IN', 'FROM', 'OF', 'UNTO', 'UNTIL', 'UPON', 'TO', 'AT']
 STOPS = ['OF', 'ON', 'THE', 'AT', 'FROM', 'IN', 'TO', 'ARE', 'WAS', 'WERE', 'AND', 'WITH', 'IS']
 
 # Load pre-computed stressdict (see gen_stress_dict.py)
@@ -23,6 +23,7 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
 
     poem = ''
     line = []
+    cut = []
     syllable_count = 0
     position = 0
     newline = '<br />' if html else '\n'
@@ -69,6 +70,7 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
             if not (2 in meter):
                 stresses = [min(i, 1) for i in stresses]
 
+            formatted = _remove_all(['.',',',':','“','”'], i)
             if fits:
                 # Enforce meter (skipped if length of meter is 0)
                 for j in range(len(stresses)):
@@ -78,7 +80,6 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                 
                 # Add word to poem
                 if fits:
-                    formatted = _remove_all(['.',',',':','“','”'], i)
                     if len(line) == 0:
                         formatted = formatted[0].upper() + formatted[1:]
                     elif word_to_key(formatted) in ARTICLES + CONJUNCTIONS + PRONOUNS + PREPOSITIONS:
@@ -93,7 +94,16 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                     if position % len(meter) == 0:
                         if syllable_count >= desired_line_length:
                             if word_to_key(formatted) in STOPS and syllable_count < desired_line_length * 1.5:
-                                line[-1] += '...'
+                                # Attempt to replace the ending stop word with a previously cut word
+                                while len(cut) > 0:
+                                    replacement = cut.pop()
+                                    if replacement[1][0] == 1:
+                                        replaced = True
+                                        line[-1] = replacement[0]
+                                        position += len(replacement[1]) - len(stresses)
+                                        syllable_count += len(stresses)
+                                        print(formatted + ' replaced by ' + replacement[0])
+                                        break
                             else:
                                 # Check poem length
                                 if len(poem) >= desired_poem_length and not word_to_key(formatted) in STOPS:
@@ -108,6 +118,9 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                                 
                                 line.clear()
                                 syllable_count = 0
+            else:
+                # Save cut words to replace some stop words
+                cut.append([formatted, stresses])
 
     return poem + '.'
 

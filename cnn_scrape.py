@@ -40,7 +40,7 @@ def scrape_article(link : str) -> tuple:
         paragraphs = [i.text.strip() for i in p]
         text = ' '.join(paragraphs)
     except Exception as e:
-        print(e)
+        pass
 
     if len(text) > 0:
         return (title, text)
