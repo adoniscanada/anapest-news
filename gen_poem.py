@@ -118,7 +118,7 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                                 poem += ' '.join(line) + newline
                                 
                                 # Divide stanzas
-                                if len(line) < desired_line_length - 1:
+                                if len(line) < desired_line_length:
                                     poem += newline
                                 
                                 line.clear()
