@@ -122,7 +122,8 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                                 syllable_count = 0
             else:
                 # Save cut words to replace some stop words
-                cut.append([formatted, stresses])
+                if not (formatted in STOPS):
+                    cut.append([formatted, stresses])
 
     return poem + '.'
 
