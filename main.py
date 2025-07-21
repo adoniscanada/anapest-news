@@ -27,8 +27,6 @@ if __name__ == '__main__':
     now = datetime.datetime.now(tz)
     db = generate_database(now.date())
 
-    logger.info('Scraped ' + str(len(db)) + ' news articles')
-
     desc = 'Poem generator from CNN articles'
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-m', '--Meter', help='Set meter', default='0,0,1')
@@ -46,4 +44,4 @@ if __name__ == '__main__':
     with open(args.Output, 'w') as file:
         json.dump(poems, file)
     
-    logger.info('Generated poems with the arguments:' + str(args))
+    logger.info('Generated ' + str(len(poems)) + ' poems with the arguments:' + str(args))
