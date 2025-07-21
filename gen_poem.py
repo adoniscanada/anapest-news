@@ -53,7 +53,7 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                     # No prepositions into conjunctions
                     not (len(line) > 0 and _are_keys_in_subsets([key, lineKeys[-1]], [CONJUNCTIONS, PREPOSITIONS])),
                     # No duplicates within line
-                    not (_are_keys_in_subsets([key], lineKeys))
+                    not (_are_keys_in_subsets([key], [lineKeys]))
             ]
             # Enforce rules
             for r in rules:
@@ -64,6 +64,7 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
             # Non-boolean rules
             # Format for poem
             formatted = _remove_all(['.',',',':','“','”'], i)
+            fKey = word_to_key(formatted)
             # Ignore stresses of stressed monosyllabic words (assume stressed words can be read unstressed, but unstressed words cannot be stressed)
             if stresses == [1] and len(meter) > 0:
                 stresses = [meter[position % len(meter)]]
@@ -71,7 +72,7 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
             if not (2 in meter):
                 stresses = [min(i, 1) for i in stresses]
             # Generalize articles
-            if word_to_key(formatted) in ARTICLES:
+            if fKey in ARTICLES:
                 formatted = 'the'
 
             if fits:
@@ -83,11 +84,13 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                 
                 # Add word to poem
                 if fits:
+                    # Capitalize first word of line and make non-nouns lowercase
+                    nonNoun = ARTICLES + CONJUNCTIONS + PRONOUNS + PREPOSITIONS
                     if len(line) == 0:
                         formatted = formatted[0].upper() + formatted[1:]
-                    elif word_to_key(formatted) in ARTICLES + CONJUNCTIONS + PRONOUNS + PREPOSITIONS:
+                    elif fKey in nonNoun:
                         formatted = formatted.lower()
-                        if position % len(meter) == 0 and line[-1] != '.':
+                        if position % len(meter) == 0 and not (lineKeys[-1] in nonNoun):
                             line[-1] += ','
 
                     line.append(formatted)
@@ -96,7 +99,7 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                     syllable_count += count
                     if position % len(meter) == 0:
                         if syllable_count >= desired_line_length:
-                            if word_to_key(formatted) in STOPS and syllable_count < desired_line_length * 1.5:
+                            if fKey in STOPS and syllable_count < desired_line_length * 2:
                                 # Attempt to replace the ending stop word with a previously cut word
                                 while len(cut) > 0:
                                     replacement = cut.pop()
