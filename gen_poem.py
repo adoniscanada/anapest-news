@@ -128,7 +128,7 @@ def generate_poem(text_list : list, banned_words : list = [], meter : list = [0,
                 if not (formatted in STOPS):
                     cut.append([formatted, stresses])
 
-    return poem + '.'
+    return poem.strip() + '.'
 
 def word_to_key(word : str, upper : bool = True):
     w = word.upper() if upper else word
