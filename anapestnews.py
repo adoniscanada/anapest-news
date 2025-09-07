@@ -1,5 +1,4 @@
 import pickle
-import random
 
 ARTICLES = ['THE', 'AN']
 PRONOUNS = ['HE', 'SHE', 'HIS', 'HER', 'THEY', 'THEIR', 'HIM', 'HERS', 'THEM', 'MY', 'IT']
@@ -17,7 +16,7 @@ common_acronyms = {
     'US' : [1, 0]
 }
 
-def generate_poem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1], desired_line_length : int = 9, desired_poem_length : int = 120, html = True):
+def makePoem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1], desired_line_length : int = 9, desired_poem_length : int = 120, html = True):
     if len(stressdict) == 0:
         return ''
 

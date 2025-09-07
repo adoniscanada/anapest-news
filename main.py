@@ -1,12 +1,10 @@
 import argparse
 import logging
 import logging.handlers
-import pickle
 import json
-import datetime
-from pytz import timezone
-from cnn_scrape import generate_database
-from gen_poem import generate_poem
+
+from cnnscrape import generateTodaysDatabase
+from anapestnews import makePoem
 
 # Logger
 logger = logging.getLogger(__name__)
@@ -23,9 +21,6 @@ logger.addHandler(logger_file_handler)
 
 # Main
 if __name__ == '__main__':
-    tz = timezone('US/Eastern')
-    now = datetime.datetime.now(tz)
-    db = generate_database(now.date())
 
     desc = 'Poem generator from CNN articles'
     parser = argparse.ArgumentParser(description=desc)
@@ -36,11 +31,12 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--Output', help='Set output file', default='poems.json')
     args = parser.parse_args()
 
+    db = generateTodaysDatabase()
     poems = {}
     for i in db.keys():
-        p = generate_poem(db[i].split(), [b for b in args.Banned.split(',')], [int(m) for m in args.Meter.split(',')], int(args.Line), int(args.Poem))
+        p = makePoem(db[i].split(), [b for b in args.Banned.split(',')], [int(m) for m in args.Meter.split(',')], int(args.Line), int(args.Poem))
         poems[i] = p
-
+    
     with open(args.Output, 'w') as file:
         json.dump(poems, file)
     

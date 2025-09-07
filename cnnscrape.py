@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 import datetime
+from pytz import timezone
+from tqdm import tqdm
 
 NEWS_URL = 'https://www.cnn.com'
 
@@ -46,12 +48,18 @@ def scrape_article(link : str) -> tuple:
     
     return (None, None)
 
-def generate_database(day : datetime.date):
+def generateDatabase(day : datetime.date):
     keyword = day.strftime('/%Y/%m/%d')
     database = {}
     links = scrape_for_links(keyword)
-    for link in links:
+
+    for link in tqdm(links):
         article = scrape_article(link)
         if article[0] != None:
             database[article[0]] = article[1]
     return database
+
+def generateTodaysDatabase():
+    tz = timezone('US/Eastern')
+    now = datetime.datetime.now(tz)
+    return generateDatabase(now.date())
