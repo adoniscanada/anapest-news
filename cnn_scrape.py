@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import datetime
 
 NEWS_URL = 'https://www.cnn.com'
-START_STR = '(CNN)'
 
 def scrape_for_links(keyword : str) -> set:
     links = set()
@@ -17,7 +16,7 @@ def scrape_for_links(keyword : str) -> set:
         
         for link in soup.find_all('a'):
             ref = link.get('href')
-            if type(ref) == str and keyword in ref:
+            if type(ref) == str and ref.find(keyword) == 0:
                 links.add(NEWS_URL + ref)
     except:
         pass
@@ -35,7 +34,7 @@ def scrape_article(link : str) -> tuple:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
         title = soup.title.string
-        p = soup.find_all('p', class_='paragraph')
+        p = soup.find_all('p', attrs={"data-component-name": "paragraph"})
         
         paragraphs = [i.text.strip() for i in p]
         text = ' '.join(paragraphs)
@@ -48,7 +47,7 @@ def scrape_article(link : str) -> tuple:
     return (None, None)
 
 def generate_database(day : datetime.date):
-    keyword = day.strftime('%Y/%m/%d')
+    keyword = day.strftime('/%Y/%m/%d')
     database = {}
     links = scrape_for_links(keyword)
     for link in links:
