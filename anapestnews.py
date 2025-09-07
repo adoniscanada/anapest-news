@@ -6,7 +6,7 @@ CONJUNCTIONS = ['FOR', 'AND', 'NOR', 'BUT', 'OR', 'YET', 'SO', 'ALTHOUGH', 'AFTE
 PREPOSITIONS = ['IN', 'FROM', 'OF', 'UNTO', 'UNTIL', 'UPON', 'TO', 'AT']
 STOPS = ['ON', 'ARE', 'WAS', 'WERE', 'WITH', 'IS'] + ARTICLES + PRONOUNS + PREPOSITIONS
 
-# Load pre-computed stressdict (see gen_stress_dict.py)
+# Load pre-computed stressdict (see stressdict.py)
 stressdict = {}
 with open('stressdict.pkl', 'rb') as file:
     stressdict = pickle.load(file)
