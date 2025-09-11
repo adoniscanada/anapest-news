@@ -59,7 +59,7 @@ def generateDatabase(day : datetime.date):
             database[article[0]] = article[1]
     return database
 
-def generateTodaysDatabase():
+def generate_todays_database():
     tz = timezone('US/Eastern')
     now = datetime.datetime.now(tz)
     return generateDatabase(now.date())
