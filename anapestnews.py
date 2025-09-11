@@ -3,13 +3,8 @@ import json
 from argparse import ArgumentParser
 import logging, logging.handlers
 
+from wordtypes import *
 from cnnscrape import generate_todays_database
-
-ARTICLES = ['THE', 'AN']
-PRONOUNS = ['HE', 'SHE', 'HIS', 'HER', 'THEY', 'THEIR', 'HIM', 'HERS', 'THEM', 'MY', 'IT']
-CONJUNCTIONS = ['FOR', 'AND', 'NOR', 'BUT', 'OR', 'YET', 'SO', 'ALTHOUGH', 'AFTER', 'AS', 'WHILE', 'WHEN', 'WHEREAS', 'WHENEVER', 'WHEREVER', 'WHETHER', 'HOW', 'IF', 'THOUGH', 'BECAUSE', 'BEFORE', 'UNTIL', 'UNLESS', 'SINCE']
-PREPOSITIONS = ['IN', 'FROM', 'OF', 'UNTO', 'UNTIL', 'UPON', 'TO', 'AT']
-STOPS = ['ON', 'ARE', 'WAS', 'WERE', 'WITH', 'IS'] + ARTICLES + PRONOUNS + PREPOSITIONS
 
 # Load pre-computed stressdict (see stressdict.py)
 stressdict = {}
@@ -31,33 +26,33 @@ def makePoem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1
     syllable_count = 0
     position = 0
     newline = '<br />' if html else '\n'
-
     # Iterate through each word
     for i in text_list:
-        key = word_to_key(i)
+        # key = word_to_key(i)
+        key = wordkey(i)
         fits = True
 
-        if ((key in stressdict) or (i.isupper() and key in common_acronyms)) and not (key in words_to_keys(banned_words)):
+        if ((key in stressdict) or (i.isupper() and key in common_acronyms)) and not key in [wordkey(i) for i in banned_words]:
             stresses = common_acronyms[key] if (i.isupper() and key in common_acronyms) else stressdict[key]
             # Add boolean rules here: (word is only considered if all rules equate to True)
-            lineKeys = [word_to_key(j) for j in line]
+            lineKeys = [wordkey(j) for j in line]
             rules = [
                     # No consecutive polysyllabics
                     not (len(line) > 0 and len(stresses) > 1 and len(stressdict[lineKeys[-1]]) > 1),
                     # No articles into conjunctions
-                    not (len(line) > 0 and _are_keys_in_subsets([key, lineKeys[-1]], [CONJUNCTIONS, ARTICLES])),
+                    not (len(line) > 0 and words_are_types([key, lineKeys[-1]], [CONJUNCTIONS, ARTICLES], True)),
                     # No articles into prepositions
-                    not (len(line) > 0 and _are_keys_in_subsets([key, lineKeys[-1]], [PREPOSITIONS, ARTICLES])),
+                    not (len(line) > 0 and words_are_types([key, lineKeys[-1]], [PREPOSITIONS, ARTICLES], True)),
                     # No consecutive prepositions
-                    not (len(line) > 0 and _are_keys_in_subsets([key, lineKeys[-1]], [PREPOSITIONS, PREPOSITIONS])),
+                    not (len(line) > 0 and words_are_types([key, lineKeys[-1]], [PREPOSITIONS, PREPOSITIONS], True)),
                     # No consecutive pronouns
-                    not (len(line) > 0 and _are_keys_in_subsets([key, lineKeys[-1]], [PRONOUNS, PRONOUNS])),
+                    not (len(line) > 0 and words_are_types([key, lineKeys[-1]], [PRONOUNS, PRONOUNS], True)),
                     # No starting a line on a stop
                     not (len(line) == 0 and key in STOPS),
                     # No prepositions into conjunctions
-                    not (len(line) > 0 and _are_keys_in_subsets([key, lineKeys[-1]], [CONJUNCTIONS, PREPOSITIONS])),
+                    not (len(line) > 0 and words_are_types([key, lineKeys[-1]], [CONJUNCTIONS, PREPOSITIONS], True)),
                     # No duplicates within line
-                    not (_are_keys_in_subsets([key], [lineKeys]))
+                    not (words_are_types([key], [lineKeys], True))
             ]
             # Enforce rules
             for r in rules:
@@ -67,8 +62,9 @@ def makePoem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1
             
             # Non-boolean rules
             # Format for poem
-            formatted = _remove_all(['.',',',':','“','”'], i)
-            fKey = word_to_key(formatted)
+            formatted = i
+            for j in ['.',',',':','“','”']:
+                formatted = formatted.replace(j, '')
             # Ignore stresses of stressed monosyllabic words (assume stressed words can be read unstressed, but unstressed words cannot be stressed)
             if stresses == [1] and len(meter) > 0:
                 stresses = [meter[position % len(meter)]]
@@ -76,7 +72,7 @@ def makePoem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1
             if not (2 in meter):
                 stresses = [min(i, 1) for i in stresses]
             # Generalize articles
-            if fKey in ARTICLES:
+            if key in ARTICLES:
                 formatted = 'the'
 
             if fits:
@@ -92,7 +88,7 @@ def makePoem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1
                     nonNoun = ARTICLES + CONJUNCTIONS + PRONOUNS + PREPOSITIONS
                     if len(line) == 0:
                         formatted = formatted[0].upper() + formatted[1:]
-                    elif fKey in nonNoun:
+                    elif key in nonNoun:
                         formatted = formatted.lower()
                         if position % len(meter) == 0 and not (lineKeys[-1] in nonNoun):
                             line[-1] += ','
@@ -103,7 +99,7 @@ def makePoem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1
                     syllable_count += count
                     if position % len(meter) == 0:
                         if syllable_count >= desired_line_length:
-                            if fKey in STOPS and syllable_count < desired_line_length * 2:
+                            if key in STOPS and syllable_count < desired_line_length * 2:
                                 # Attempt to replace the ending stop word with a previously cut word
                                 while len(cut) > 0:
                                     replacement = cut.pop()
@@ -115,7 +111,7 @@ def makePoem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1
                                         break
                             else:
                                 # Check poem length
-                                if len(poem) >= desired_poem_length and not word_to_key(formatted) in STOPS:
+                                if len(poem) >= desired_poem_length and not key in STOPS:
                                     poem += ' '.join(line) + '.'
                                     return poem
                                 
@@ -133,27 +129,6 @@ def makePoem(text_list : list, banned_words : list = [], meter : list = [0, 0, 1
                     cut.append([formatted, stresses])
 
     return poem.strip() + '.'
-
-def word_to_key(word : str, upper : bool = True):
-    w = word.upper() if upper else word
-    return _remove_all(['.',',',':','“','”','’'], w)
-
-def words_to_keys(words : list):
-    return [word_to_key(word) for word in words]
-
-def _remove_all(list : list, word : str):
-    w = word
-    for i in list:
-        w = w.replace(i, '')
-    return w
-
-def _are_keys_in_subsets(keys : list, subsets : list):
-    if len(keys) != len(subsets):
-        return False
-    for i in range(len(keys)):
-        if not (keys[i] in subsets[i]):
-            return False
-    return True
 
 if __name__ == '__main__':
     # Parse Arguments
