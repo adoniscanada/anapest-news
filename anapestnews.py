@@ -1,4 +1,9 @@
 import pickle
+import json
+from argparse import ArgumentParser
+import logging, logging.handlers
+
+from cnnscrape import generate_todays_database
 
 ARTICLES = ['THE', 'AN']
 PRONOUNS = ['HE', 'SHE', 'HIS', 'HER', 'THEY', 'THEIR', 'HIM', 'HERS', 'THEM', 'MY', 'IT']
@@ -149,3 +154,37 @@ def _are_keys_in_subsets(keys : list, subsets : list):
         if not (keys[i] in subsets[i]):
             return False
     return True
+
+if __name__ == '__main__':
+    # Parse Arguments
+    parser = ArgumentParser(description='Poem generator using cnnscrape.py')
+    parser.add_argument('-m', '--Meter', help='Set meter', default='0,0,1')
+    parser.add_argument('-b', '--Banned', help='Set list of words not to be considered in poem generation', default='')
+    parser.add_argument('-ll', '--Line', help='Set line length', default=3)
+    parser.add_argument('-pl', '--Poem', help='Set poem length', default=480)
+    parser.add_argument('-o', '--Output', help='Set output file', default='poems.json')
+    parser.add_argument('-ol', '--Log', help='Set output log file', default='workflow.log')
+    args = parser.parse_args()
+
+    # Generate poems using cnnscrape.py
+    db = generate_todays_database()
+    poems = {}
+    for k in db.keys():
+        p = makePoem(db[k].split(), [b for b in args.Banned.split(',')], [int(m) for m in args.Meter.split(',')], int(args.Line), int(args.Poem))
+        poems[k] = p
+    with open(args.Output, 'w') as file:
+        json.dump(poems, file)
+    
+    # Log
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    logger_file_handler = logging.handlers.RotatingFileHandler(
+        args.Log,
+        maxBytes=1024 * 1024,
+        backupCount=1,
+        encoding='utf8',
+    )
+    formatter = logging.Formatter('%(asctime)s %(message)s')
+    logger_file_handler.setFormatter(formatter)
+    logger.addHandler(logger_file_handler)
+    logger.info('Generated ' + str(len(poems)) + ' poems with the arguments:' + str(args))
